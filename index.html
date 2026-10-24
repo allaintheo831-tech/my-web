@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>나를 소개하는 페이지</title>
+    <style>
+        /* 기본 스타일 초기화 및 시스템 폰트 설정 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: #f0f8ff; /* 시원하고 밝은 연파랑 배경 */
+            color: #2c3e50;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            padding: 24px 16px;
+        }
+
+        /* 전체 컨테이너 (모바일 가로 스크롤 방지 및 너비 제한) */
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* 컨트롤 패널 (언어 변경, 편집 버튼) */
+        .control-bar {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background-color: #ffffff;
+            color: #0077ff;
+            border: 2px solid #0077ff;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .btn:hover, .btn:active {
+            background-color: #0077ff;
+            color: #ffffff;
+        }
+
+        .btn-save {
+            background-color: #00b894;
+            color: #ffffff;
+            border-color: #00b894;
+        }
+
+        .btn-save:hover, .btn-save:active {
+            background-color: #00896f;
+            border-color: #00896f;
+        }
+
+        .btn-reset {
+            color: #ff7675;
+            border-color: #ff7675;
+        }
+
+        .btn-reset:hover, .btn-reset:active {
+            background-color: #ff7675;
+            color: #ffffff;
+        }
+
+        /* 헤더 영역 */
+        header {
+            text-align: center;
+            margin-bottom: 28px;
+            padding: 0 8px;
+        }
+
+        .title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #0056b3;
+            margin-bottom: 10px;
+            word-break: keep-all;
+            line-height: 1.3;
+        }
+
+        .tagline {
+            font-size: 1.25rem;
+            color: #4a6572;
+            font-weight: 500;
+            word-break: keep-all;
+            line-height: 1.4;
+        }
+
+        /* 편집 모드 입력 필드 */
+        .edit-input {
+            width: 100%;
+            padding: 10px 14px;
+            font-size: 1.1rem;
+            border: 2px solid #0077ff;
+            border-radius: 12px;
+            margin-top: 6px;
+            background-color: #ffffff;
+        }
+
+        /* 카드 리스트 (모바일: 1열, PC/태블릿: 가로 2열 그리드) */
+        .card-list {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            align-items: start; /* 카드가 각각 독자적인 높이를 가지도록 설정 */
+        }
+
+        /* 편집 모드 시 카드 영역 전체 너비 활용 */
+        .card.edit-card {
+            grid-column: span 2;
+        }
+
+        /* 카드 개별 스타일 */
+        .card {
+            background-color: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 4px 12px rgba(0, 119, 255, 0.08);
+            border: 1px solid #e1f0ff;
+            overflow: hidden;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: #004494;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            word-break: keep-all;
+        }
+
+        .card-header:hover {
+            background-color: #f7fbff;
+        }
+
+        /* 펼침 화살표 아이콘 */
+        .arrow {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+            color: #0077ff;
+        }
+
+        .card.active .arrow {
+            transform: rotate(180deg);
+        }
+
+        /* 카드 내용 영역 */
+        .card-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1), padding 0.3s ease;
+            padding: 0 24px;
+            background-color: #ffffff;
+        }
+
+        .card.active .card-body {
+            max-height: 500px;
+            transition: max-height 0.3s cubic-bezier(1, 0, 1, 0), padding 0.3s ease;
+            padding: 0 24px 20px 24px;
+        }
+
+        .card-content {
+            font-size: 1.15rem;
+            color: #334e68;
+            line-height: 1.6;
+            word-break: keep-all;
+            border-top: 1px solid #edf2f7;
+            padding-top: 14px;
+        }
+
+        /* 삭제 버튼 (편집 모드 시) */
+        .btn-delete {
+            background-color: #ff4757;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* 카드 추가 버튼 영역 */
+        .add-card-container {
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .btn-add {
+            width: 100%;
+            padding: 14px;
+            border: 2px dashed #0077ff;
+            background-color: #e6f2ff;
+            color: #0077ff;
+            border-radius: 18px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-add:hover {
+            background-color: #d0e5ff;
+        }
+
+        /* 반응형 모바일 조정 */
+        @media (max-width: 600px) {
+            body {
+                padding: 16px 12px;
+            }
+            .card-list {
+                grid-template-columns: 1fr; /* 모바일에서는 1열로 표시 */
+            }
+            .card.edit-card {
+                grid-column: span 1;
+            }
+            .title {
+                font-size: 1.8rem;
+            }
+            .tagline {
+                font-size: 1.1rem;
+            }
+            .card-header {
+                font-size: 1.2rem;
+                padding: 16px 18px;
+            }
+            .card-content {
+                font-size: 1.05rem;
+            }
+            .btn {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- 상단 조작 버튼 (언어 전환 및 편집 모드) -->
+        <div class="control-bar">
+            <button class="btn" id="lang-btn" onclick="toggleLanguage()">🌐 English</button>
+            <button class="btn" id="edit-btn" onclick="toggleEditMode()">✏️ 내용 수정하기</button>
+            <button class="btn btn-reset" id="reset-btn" onclick="resetData()" style="display: none;">🔄 초기화</button>
+        </div>
+
+        <!-- 헤더: 별명 및 한 줄 소개 -->
+        <header>
+            <div id="view-header">
+                <h1 class="title" id="display-nickname">✨ 파란하늘</h1>
+                <p class="tagline" id="display-tagline">매일 새로운 것을 배우고 즐기는 모험가입니다!</p>
+            </div>
+            <div id="edit-header" style="display: none;">
+                <label style="font-weight: bold; color: #0056b3;">별명:</label>
+                <input type="text" id="input-nickname" class="edit-input">
+                <label style="font-weight: bold; color: #0056b3; margin-top: 10px; display: block;">한 줄 소개:</label>
+                <input type="text" id="input-tagline" class="edit-input">
+            </div>
+        </header>
+
+        <!-- 카드 영역 -->
+        <main class="card-list" id="card-list">
+            <!-- 자바스크립트로 카드가 동적 생성됩니다 -->
+        </main>
+
+        <!-- 카드 추가 버튼 (편집 모드 시 노출) -->
+        <div class="add-card-container" id="add-card-container" style="display: none;">
+            <button class="btn-add" onclick="addNewCard()">➕ 새로운 카드 추가하기</button>
+        </div>
+    </div>
+
+    <script>
+        // 기본 데이터 설정 (한국어 / 영어)
+        const defaultData = {
+            ko: {
+                nickname: "✨ 파란하늘",
+                tagline: "매일 새로운 것을 배우고 즐기는 모험가입니다!",
+                cards: [
+                    {
+                        title: "🧪 좋아하는 것",
+                        content: "세상의 원리를 알아가는 재미있는 과학 이야기를 좋아합니다!"
+                    },
+                    {
+                        title: "⚾ 요즘 관심사",
+                        content: "가장 가슴 뜨거워지는 시즌! 야구 포스트시즌 경기 응원에 푹 빠져있어요."
+                    },
+                    {
+                        title: "✈️ 올해 해 보고 싶은 것",
+                        content: "사랑하는 가족들과 함께 맛있는 것도 먹고 휴식하는 멋진 여행을 떠나고 싶어요."
+                    },
+                    {
+                        title: "🎵 인생 음악 & 아티스트",
+                        content: "힙합의 전설 에미넴(Eminem)! 강렬한 비트와 솔직하고 에너지 넘치는 랩 가사를 정말 좋아합니다."
+                    },
+                    {
+                        title: "🍕 나의 소울 푸드",
+                        content: "바삭하고 고소한 치킨! 언제 먹어도 질리지 않는 완벽한 저녁 메뉴입니다."
+                    }
+                ]
+            },
+            en: {
+                nickname: "✨ Blue Sky",
+                tagline: "An adventurer who learns and enjoys new things every day!",
+                cards: [
+                    {
+                        title: "🧪 What I Like",
+                        content: "I love fascinating science stories that explain how the world works!"
+                    },
+                    {
+                        title: "⚾ Current Interest",
+                        content: "The most thrilling season! I'm completely hooked on cheering for the baseball post-season."
+                    },
+                    {
+                        title: "✈️ Goal for This Year",
+                        content: "I want to go on a wonderful vacation with my beloved family to relax and eat good food."
+                    },
+                    {
+                        title: "🎵 Favorite Music & Artist",
+                        content: "The legend Eminem! I absolutely love his energetic rap lyrics and powerful beats."
+                    },
+                    {
+                        title: "🍕 My Soul Food",
+                        content: "Crispy and delicious Fried Chicken! The ultimate comfort food that never gets old."
+                    }
+                ]
+            }
+        };
+
+        let currentLang = 'ko';
+        let isEditMode = false;
+        let profileData = {};
+
+        // 페이지 로드 시 로컬 스토리지에서 데이터 로드
+        window.onload = function() {
+            loadStoredData();
+            render();
+        };
+
+        // 데이터 로드
+        function loadStoredData() {
+            const savedData = localStorage.getItem('myProfileData_v2');
+            if (savedData) {
+                try {
+                    profileData = JSON.parse(savedData);
+                } catch(e) {
+                    profileData = JSON.parse(JSON.stringify(defaultData));
+                }
+            } else {
+                profileData = JSON.parse(JSON.stringify(defaultData));
+            }
+        }
+
+        // 화면 그리기는 함수
+        function render() {
+            const data = profileData[currentLang];
+
+            // 언어 버튼 텍스트 변경
+            document.getElementById('lang-btn').innerText = currentLang === 'ko' ? '🌐 English' : '🌐 한국어';
+
+            // 헤더 데이터 바인딩
+            document.getElementById('display-nickname').innerText = data.nickname;
+            document.getElementById('display-tagline').innerText = data.tagline;
+            document.getElementById('input-nickname').value = data.nickname;
+            document.getElementById('input-tagline').value = data.tagline;
+
+            // 카드 리스트 그리기
+            const cardListContainer = document.getElementById('card-list');
+            cardListContainer.innerHTML = '';
+
+            data.cards.forEach((card, index) => {
+                const cardEl = document.createElement('div');
+                cardEl.className = 'card';
+                
+                if (isEditMode) {
+                    // 편집 모드에서의 카드 형태
+                    cardEl.classList.add('active', 'edit-card'); // 편집 중엔 넓게 표시
+                    cardEl.innerHTML = `
+                        <div style="padding: 16px;">
+                            <label style="font-size:0.9rem; font-weight:bold; color:#0056b3;">카드 제목:</label>
+                            <input type="text" class="edit-input" value="${escapeHtml(card.title)}" onchange="updateCardTitle(${index}, this.value)">
+                            <label style="font-size:0.9rem; font-weight:bold; color:#0056b3; margin-top:10px; display:block;">카드 설명:</label>
+                            <textarea class="edit-textarea" onchange="updateCardContent(${index}, this.value)">${escapeHtml(card.content)}</textarea>
+                            <button class="btn-delete" onclick="deleteCard(${index})">🗑️ 카드 삭제</button>
+                        </div>
+                    `;
+                } else {
+                    // 일반 보기 모드에서의 카드 형태
+                    cardEl.innerHTML = `
+                        <div class="card-header" onclick="toggleCard(this)">
+                            <span>${escapeHtml(card.title)}</span>
+                            <span class="arrow">▼</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="card-content">${escapeHtml(card.content)}</div>
+                        </div>
+                    `;
+                }
+                cardListContainer.appendChild(cardEl);
+            });
+        }
+
+        // 아코디언 토글 함수
+        function toggleCard(headerEl) {
+            if (isEditMode) return;
+            const card = headerEl.parentElement;
+            card.classList.toggle('active');
+        }
+
+        // 언어 전환
+        function toggleLanguage() {
+            if (isEditMode) {
+                saveCurrentInputs();
+            }
+            currentLang = currentLang === 'ko' ? 'en' : 'ko';
+            render();
+        }
+
+        // 편집 모드 토글
+        function toggleEditMode() {
+            const editBtn = document.getElementById('edit-btn');
+            const resetBtn = document.getElementById('reset-btn');
+            const viewHeader = document.getElementById('view-header');
+            const editHeader = document.getElementById('edit-header');
+            const addCardContainer = document.getElementById('add-card-container');
+
+            if (!isEditMode) {
+                // 편집 모드로 전환
+                isEditMode = true;
+                editBtn.innerText = '💾 저장 및 완료';
+                editBtn.classList.add('btn-save');
+                resetBtn.style.display = 'inline-block';
+                viewHeader.style.display = 'none';
+                editHeader.style.display = 'block';
+                addCardContainer.style.display = 'block';
+            } else {
+                // 저장 및 일반 모드로 전환
+                saveCurrentInputs();
+                localStorage.setItem('myProfileData_v2', JSON.stringify(profileData));
+                
+                isEditMode = false;
+                editBtn.innerText = '✏️ 내용 수정하기';
+                editBtn.classList.remove('btn-save');
+                resetBtn.style.display = 'none';
+                viewHeader.style.display = 'block';
+                editHeader.style.display = 'none';
+                addCardContainer.style.display = 'none';
+            }
+            render();
+        }
+
+        // 입력 중인 값 임시 저장
+        function saveCurrentInputs() {
+            profileData[currentLang].nickname = document.getElementById('input-nickname').value;
+            profileData[currentLang].tagline = document.getElementById('input-tagline').value;
+        }
+
+        // 카드 제목 수정
+        function updateCardTitle(index, value) {
+            profileData[currentLang].cards[index].title = value;
+        }
+
+        // 카드 내용 수정
+        function updateCardContent(index, value) {
+            profileData[currentLang].cards[index].content = value;
+        }
+
+        // 카드 삭제
+        function deleteCard(index) {
+            profileData[currentLang].cards.splice(index, 1);
+            render();
+        }
+
+        // 새로운 카드 추가
+        function addNewCard() {
+            saveCurrentInputs();
+            const newTitle = currentLang === 'ko' ? '✨ 새로운 카드' : '✨ New Card';
+            const newContent = currentLang === 'ko' ? '여기에 설명을 입력하세요.' : 'Enter description here.';
+            
+            profileData[currentLang].cards.push({
+                title: newTitle,
+                content: newContent
+            });
+            render();
+        }
+
+        // 초기화
+        function resetData() {
+            if (confirm(currentLang === 'ko' ? '정말로 모든 내용을 기본 예시로 초기화하시겠습니까?' : 'Are you sure you want to reset all content to default?')) {
+                localStorage.removeItem('myProfileData_v2');
+                profileData = JSON.parse(JSON.stringify(defaultData));
+                render();
+            }
+        }
+
+        // HTML 이스케이프 (보안 처리)
+        function escapeHtml(str) {
+            return str
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+    </script>
+</body>
+</html>
